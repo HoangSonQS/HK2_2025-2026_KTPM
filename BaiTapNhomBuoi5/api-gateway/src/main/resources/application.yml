@@ -1,0 +1,93 @@
+server:
+  port: 6789
+  address: 0.0.0.0
+
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: api-gateway
+  main:
+    web-application-type: reactive
+  cloud:
+    inetutils:
+      prefer-ip-address: true
+    gateway:
+      server:
+        webflux:
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                # Dev-friendly: allow any origin (LAN/localhost) without cookies.
+                # If you later need cookies, switch to explicit allowedOrigins and set allowCredentials: true.
+                allowedOriginPatterns:
+                  - "*"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders:
+                  - "*"
+                exposedHeaders:
+                  - Authorization
+                allowCredentials: true
+          routes:
+            - id: user-service-login
+              uri: ${USER_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/users/login
+              filters:
+                - SetPath=/login
+
+            - id: user-service-register
+              uri: ${USER_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/users/register
+              filters:
+                - SetPath=/register
+
+            - id: user-service
+              uri: ${USER_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/users,/api/users/**
+              filters:
+                - StripPrefix=1
+
+            - id: food-service
+              uri: ${FOOD_SERVICE_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/foods,/api/foods/**
+              filters:
+                - StripPrefix=1
+
+            - id: order-service
+              uri: ${ORDER_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/orders,/api/orders/**
+              filters:
+                - StripPrefix=1
+
+            - id: payment-service
+              uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/payments,/api/payments/**
+              filters:
+                - StripPrefix=1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-change-me-dev-secret-change-me}
+
+logging:
+  level:
+    iuh.fit.apigateway.filter: INFO
