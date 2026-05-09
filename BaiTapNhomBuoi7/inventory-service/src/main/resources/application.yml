@@ -1,0 +1,18 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: inventory-service
+  config:
+    import: optional:file:.env[.properties]
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: 6379
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG # Để xem chi tiết request gọi đến server
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
